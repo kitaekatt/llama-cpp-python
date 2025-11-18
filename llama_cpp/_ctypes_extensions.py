@@ -110,11 +110,16 @@ def ctypes_function_for_shared_library(lib: ctypes.CDLL):
     ):
         def decorator(f: F) -> F:
             if enabled:
-                func = getattr(lib, name)
-                func.argtypes = argtypes
-                func.restype = restype
-                functools.wraps(f)(func)
-                return func
+                try:
+                    func = getattr(lib, name)
+                    func.argtypes = argtypes
+                    func.restype = restype
+                    functools.wraps(f)(func)
+                    return func
+                except AttributeError:
+                    # Symbol not found in library - may be deprecated in newer llama.cpp
+                    # Return the stub function instead
+                    return f
             else:
                 return f
 
